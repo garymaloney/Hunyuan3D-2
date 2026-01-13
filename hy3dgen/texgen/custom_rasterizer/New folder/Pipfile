@@ -1,0 +1,33 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+ninja = "*"
+pybind11 = "*"
+diffusers = "*"
+einops = "*"
+opencv-python = "*"
+numpy = "*"
+torch = "*"
+transformers = "*"
+torchvision = "*"
+omegaconf = "*"
+tqdm = "*"
+trimesh = "*"
+pymeshlab = "*"
+pygltflib = "*"
+xatlas = "*"
+accelerate = "*"
+gradio = "*"
+fastapi = "*"
+uvicorn = "*"
+rembg = "*"
+onnxruntime = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+python_full_version = "3.13.2"

@@ -12,8 +12,21 @@
 # fine-tuning enabling code and other elements of the foregoing made publicly available
 # by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
 
-import custom_rasterizer_kernel
+import os
+import sys
 import torch
+
+# Ensure Windows can find CUDA and conda-provided DLLs at import time
+try:
+    # conda env bin where CUDA runtime DLLs are installed
+    os.add_dll_directory(r"C:\Users\coryc\miniconda3\envs\py311_rasterizer\bin")
+    os.add_dll_directory(r"C:\Users\coryc\miniconda3\envs\py311_rasterizer\Library\bin")
+    # torch C++ libraries
+    os.add_dll_directory(os.path.join(sys.prefix, r"Lib\site-packages\torch\lib"))
+except Exception:
+    pass
+
+import custom_rasterizer_kernel
 
 
 def rasterize(pos, tri, resolution, clamp_depth=torch.zeros(0), use_depth_prior=0):

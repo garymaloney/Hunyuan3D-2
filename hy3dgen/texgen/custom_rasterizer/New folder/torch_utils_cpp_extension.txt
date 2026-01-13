@@ -1,0 +1,2 @@
+C:\Users\coryc\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\cpp_extension
+line 235: CUDNN_HOME: str | None = os.environ.get('CUDNN_HOME') or os.environ.get('CUDNN_PATH')
