@@ -26,6 +26,24 @@ for key in list(sys.modules.keys()):
 # submodule so it will be re-imported with the updated environment.
 import importlib
 cpp_mod = importlib.import_module('torch.utils.cpp_extension')
+# Remove stray nsight-compute entries from PATH that point to non-existent helpers
+# (some conda packages add nsight paths that reference python.bat which may not exist).
+path_parts = os.environ.get('PATH', '').split(os.pathsep)
+filtered = []
+for p in path_parts:
+    lp = p.lower()
+    if 'nsight-compute' in lp:
+        if os.path.isdir(p):
+            # keep only if directory exists and contains a usable exe
+            if any(os.path.isfile(os.path.join(p, f)) for f in ('nsight-compute.exe', 'nv-nsight-cu-cli.exe', 'python.bat')):
+                filtered.append(p)
+            else:
+                print('Removing broken nsight-compute PATH entry:', p)
+        else:
+            print('Removing missing nsight-compute PATH entry:', p)
+    else:
+        filtered.append(p)
+os.environ['PATH'] = os.pathsep.join(filtered)
 # Ensure module sees our CUDA_HOME
 if hasattr(cpp_mod, 'CUDA_HOME'):
     cpp_mod.CUDA_HOME = os.environ.get('CUDA_HOME')
@@ -36,5 +54,19 @@ if 'TORCH_CUDA_ARCH_LIST' not in os.environ:
     # Common architectures; adjust if you know your GPU (e.g., '8.6' for RTX 40xx)
     os.environ['TORCH_CUDA_ARCH_LIST'] = '7.5;8.0;8.6'
 load = getattr(cpp_mod, 'load')
-module = load(name='custom_rasterizer_kernel', sources=sources, verbose=True)
-print('Built module:', module)
+try:
+    module = load(name='custom_rasterizer_kernel', sources=sources, verbose=True)
+    print('Built module:', module)
+except Exception as e:
+    msg = str(e).lower()
+    if 'nsight' in msg or 'python.bat' in msg or 'could not find files' in msg:
+        print('Warning: nsight-compute helper error detected, falling back to CPU-only build.')
+        cpu_sources = [s for s in sources if not s.endswith('.cu')]
+        try:
+            module = load(name='custom_rasterizer_kernel', sources=cpu_sources, verbose=True)
+            print('Built CPU-only module:', module)
+        except Exception as e2:
+            print('CPU-only fallback also failed:', e2)
+            raise
+    else:
+        raise
